@@ -91,7 +91,7 @@ export default function HomePage() {
     setFlippedStates(Array(newConfig.cardCount).fill(false));
     setInterpretation(null);
     setHasDrawn(false);
-    setIsLoadingInterpretation(false);
+    setIsLoadingInterpretation(false); // Reset loading state when spread changes
   }, [selectedSpread]);
 
   const handleShuffleAndDraw = useCallback(() => {
@@ -110,7 +110,7 @@ export default function HomePage() {
   }, [currentSpreadConfig, toast]);
 
   const handleFlipCard = (index: number) => {
-    if (!drawnCards[index] || !drawnCards[index].id) return;
+    if (!drawnCards[index] || !drawnCards[index].id) return; // Prevent flipping placeholders
     setFlippedStates(prev => {
       const newState = [...prev];
       newState[index] = !newState[index];
@@ -120,7 +120,7 @@ export default function HomePage() {
 
   const allCardsFlipped =
     drawnCards.length > 0 &&
-    drawnCards.every(card => card && typeof card.id === 'string' && card.id !== '') &&
+    drawnCards.every(card => card && typeof card.id === 'string' && card.id !== '') && // Ensures all drawn cards are actual cards (non-empty ID)
     flippedStates.length === drawnCards.length &&
     flippedStates.every(state => state === true);
 
@@ -137,7 +137,7 @@ export default function HomePage() {
 
     const cardDetailsForAI = drawnCards
       .map((card, index) => {
-        if (card && card.id) {
+        if (card && card.id) { // Ensure we only send valid card data
           return {
             name: card.name,
             positionLabel: currentSpreadConfig.labels[index],
@@ -163,7 +163,7 @@ export default function HomePage() {
     };
 
     setIsLoadingInterpretation(true);
-    setInterpretation(null);
+    setInterpretation(null); // Clear previous interpretation
     try {
       const result = await interpretTarotCards(aiInput);
       setInterpretation(result.interpretation);
@@ -278,3 +278,5 @@ export default function HomePage() {
     </div>
   );
 }
+
+    
