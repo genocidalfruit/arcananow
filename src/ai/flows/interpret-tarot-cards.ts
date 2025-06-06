@@ -1,3 +1,4 @@
+
 'use server';
 /**
  * @fileOverview A tarot card interpretation AI agent.
@@ -11,9 +12,11 @@ import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 
 const InterpretTarotCardsInputSchema = z.object({
-  card1: z.string().describe('The name of the first tarot card.'),
-  card2: z.string().describe('The name of the second tarot card.'),
-  card3: z.string().describe('The name of the third tarot card.'),
+  spreadType: z.string().describe("The type of tarot spread performed, e.g., 'Three Card Spread', 'Pentagram Spread', 'Celtic Cross Spread'."),
+  cards: z.array(z.object({
+    name: z.string().describe("The name of the tarot card."),
+    positionLabel: z.string().describe("The label or meaning of this card's position in the spread, e.g., 'Past', 'Present situation', 'Hopes and Fears'.")
+  })).min(1).describe("An array of cards drawn, including their name and positional meaning in the spread."),
 });
 export type InterpretTarotCardsInput = z.infer<typeof InterpretTarotCardsInputSchema>;
 
@@ -30,11 +33,17 @@ const prompt = ai.definePrompt({
   name: 'interpretTarotCardsPrompt',
   input: {schema: InterpretTarotCardsInputSchema},
   output: {schema: InterpretTarotCardsOutputSchema},
-  prompt: `You are an expert tarot card reader. Provide an interpretation of the following tarot card spread:
+  prompt: `You are an expert tarot card reader with deep knowledge of card meanings and spread interpretations.
+The user has performed a '{{spreadType}}'.
+Please provide a comprehensive and insightful interpretation of the following tarot cards. Consider each card's individual meaning as well as its specific meaning within its designated position in this particular spread.
+Weave the interpretations of all cards together into a cohesive narrative or guidance relevant to the user.
 
-Card 1 (Past): {{card1}}
-Card 2 (Present): {{card2}}
-Card 3 (Future): {{card3}}`,
+Here are the cards and their positions within the '{{spreadType}}':
+{{#each cards}}
+- Card at position '{{positionLabel}}': {{name}}
+{{/each}}
+
+Offer a thoughtful and well-rounded reading based on this information. Be clear and empathetic in your response.`,
 });
 
 const interpretTarotCardsFlow = ai.defineFlow(
@@ -45,6 +54,11 @@ const interpretTarotCardsFlow = ai.defineFlow(
   },
   async input => {
     const {output} = await prompt(input);
-    return output!;
+    if (!output) {
+      throw new Error("No output received from the AI model for tarot interpretation.");
+    }
+    return output;
   }
 );
+
+    
