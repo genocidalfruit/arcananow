@@ -71,8 +71,8 @@ export default function HomePage() {
   const [selectedSpread, setSelectedSpread] = useState<string>(SPREAD_OPTIONS[0].value);
   const currentSpreadConfig = SPREAD_CONFIGS[selectedSpread];
 
-  const [drawnCards, setDrawnCards] = useState<(TarotCardData | null)[]>(Array(currentSpreadConfig.cardCount).fill(null));
-  const [flippedStates, setFlippedStates] = useState<boolean[]>(Array(currentSpreadConfig.cardCount).fill(false));
+  const [drawnCards, setDrawnCards] = useState<TarotCardData[]>([]); // TarotCardData now includes isReversed
+  const [flippedStates, setFlippedStates] = useState<boolean[]>([]);
   const [interpretation, setInterpretation] = useState<string | null>(null);
   const [isLoadingInterpretation, setIsLoadingInterpretation] = useState(false);
   const [shuffledDeck, setShuffledDeck] = useState<TarotCardData[]>([]);
@@ -85,22 +85,19 @@ export default function HomePage() {
 
   useEffect(() => {
     const newConfig = SPREAD_CONFIGS[selectedSpread];
-    setDrawnCards(Array(newConfig.cardCount).fill(null));
+    setDrawnCards(Array(newConfig.cardCount).fill(null).map(() => ({
+        // Placeholder structure until actual cards are drawn
+        id: '', name: '', arcana: 'Major', imageUrl: '', dataAiHint: '', isReversed: false 
+    })));
     setFlippedStates(Array(newConfig.cardCount).fill(false));
     setInterpretation(null);
-    setHasDrawn(false); // Reset drawing state when spread changes
-    // Toast to inform user about reset if cards were already drawn
-    // if (hasDrawn) {
-    //   toast({
-    //     title: "Spread Changed",
-    //     description: "Please re-draw cards for the new spread.",
-    //   });
-    // }
+    setHasDrawn(false); 
   }, [selectedSpread]);
 
   const handleShuffleAndDraw = useCallback(() => {
     const newShuffledDeck = shuffleDeck(fullTarotDeck);
     setShuffledDeck(newShuffledDeck);
+    // drawCards now handles random reversal internally
     const newDrawnCards = drawCards(newShuffledDeck, currentSpreadConfig.cardCount);
     setDrawnCards(newDrawnCards);
     setFlippedStates(Array(currentSpreadConfig.cardCount).fill(false));
@@ -108,12 +105,12 @@ export default function HomePage() {
     setHasDrawn(true);
     toast({
       title: "Deck Shuffled & Cards Drawn",
-      description: `Your ${currentSpreadConfig.label} cards are ready.`,
+      description: `Your ${currentSpreadConfig.label} cards are ready. Some may be reversed.`,
     });
   }, [currentSpreadConfig, toast]);
 
   const handleFlipCard = (index: number) => {
-    if (!drawnCards[index]) return;
+    if (!drawnCards[index] || !drawnCards[index].id) return; // Check if card has an id (is a real card)
     setFlippedStates(prev => {
       const newState = [...prev];
       newState[index] = !newState[index];
@@ -121,8 +118,9 @@ export default function HomePage() {
     });
   };
 
-  const allCardsFlipped = drawnCards.length === currentSpreadConfig.cardCount && 
-                          drawnCards.every(card => card !== null) && 
+  const allCardsFlipped = drawnCards.length > 0 && 
+                          drawnCards.every(card => card && card.id) && // Ensure all card slots are filled with actual cards
+                          flippedStates.length === drawnCards.length &&
                           flippedStates.every(state => state);
 
   const handleInterpretSpread = async () => {
@@ -137,27 +135,28 @@ export default function HomePage() {
 
     const cardDetailsForAI = drawnCards
       .map((card, index) => {
-        if (card) {
+        if (card && card.id) { // Ensure card is not a placeholder and has an id
           return {
             name: card.name,
             positionLabel: currentSpreadConfig.labels[index],
+            isReversed: !!card.isReversed, // Pass reversal status
           };
         }
         return null;
       })
-      .filter((c): c is { name: string; positionLabel: string } => c !== null);
+      .filter((c): c is { name: string; positionLabel: string; isReversed: boolean } => c !== null);
 
     if (cardDetailsForAI.length !== currentSpreadConfig.cardCount) {
         toast({
             title: "Error",
-            description: "Not enough cards to interpret for the selected spread.",
+            description: "Not enough valid cards to interpret for the selected spread.",
             variant: "destructive",
         });
         return;
     }
     
     const aiInput: InterpretTarotCardsInput = {
-      spreadType: currentSpreadConfig.label, // Use the human-readable label for the AI
+      spreadType: currentSpreadConfig.label,
       cards: cardDetailsForAI,
     };
     
@@ -188,7 +187,7 @@ export default function HomePage() {
       <AppHeader />
 
       <div className="my-8 flex flex-col sm:flex-row items-center gap-4">
-        <Select value={selectedSpread} onValueChange={setSelectedSpread} disabled={isLoadingInterpretation || (hasDrawn && !allCardsFlipped && !interpretation)}>
+        <Select value={selectedSpread} onValueChange={setSelectedSpread} disabled={isLoadingInterpretation}>
           <SelectTrigger className="w-full sm:w-[240px] h-12 text-base">
             <SelectValue placeholder="Select a spread" />
           </SelectTrigger>
@@ -212,13 +211,13 @@ export default function HomePage() {
         </Button>
       </div>
 
-      {hasDrawn && (
+      {hasDrawn && drawnCards.length > 0 && drawnCards[0]?.id && ( // Check if first card has an id (meaning real cards are drawn)
         <section aria-label={`Tarot card spread: ${currentSpreadConfig.label}`} className="mb-12 w-full max-w-5xl">
           <div className={`grid ${currentSpreadConfig.getGridClass()} gap-4 md:gap-6 items-start justify-center`}>
             {drawnCards.map((card, index) => (
               <TarotCard
-                key={card ? `${card.id}-${index}` : `empty-${index}-${selectedSpread}`}
-                card={card}
+                key={card && card.id ? `${card.id}-${index}-${card.isReversed}` : `placeholder-${index}-${selectedSpread}`}
+                card={card} // Pass the full card object which includes isReversed
                 isFlipped={flippedStates[index]}
                 onFlip={() => handleFlipCard(index)}
                 label={currentSpreadConfig.labels[index]}
@@ -277,5 +276,3 @@ export default function HomePage() {
     </div>
   );
 }
-
-    

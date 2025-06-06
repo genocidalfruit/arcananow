@@ -1,3 +1,4 @@
+
 "use client";
 
 import Image from 'next/image';
@@ -14,13 +15,14 @@ interface TarotCardProps {
 }
 
 export function TarotCard({ card, isFlipped, onFlip, label, className }: TarotCardProps) {
-  const cardAspectRatio = 4.75 / 2.75; // standard tarot card ratio height/width
-  const cardWidth = "w-48 sm:w-56 md:w-64"; // responsive width
-  // Calculate height based on width and aspect ratio for the container
-  // This is tricky with Tailwind, so we'll use padding-bottom trick for aspect ratio or fixed height
-  // For simplicity, let's use fixed heights that approximate the ratio.
+  const cardAspectRatio = 4.75 / 2.75; 
+  const cardWidth = "w-48 sm:w-56 md:w-64"; 
   const cardHeight = "h-[16rem] sm:h-[19rem] md:h-[22rem]";
 
+  const cardName = card ? `${card.name}${card.isReversed ? " (Reversed)" : ""}` : "Card";
+  const ariaLabel = isFlipped && card 
+    ? `Revealed card: ${cardName}` 
+    : `Hidden card, click to reveal ${label || ''}${card?.isReversed ? " (possibly reversed)" : ""}`;
 
   return (
     <div className={cn("flex flex-col items-center space-y-2", className)}>
@@ -34,7 +36,7 @@ export function TarotCard({ card, isFlipped, onFlip, label, className }: TarotCa
         style={{ perspective: '1000px' }}
         role="button"
         aria-pressed={isFlipped}
-        aria-label={isFlipped && card ? `Revealed card: ${card.name}` : `Hidden card, click to reveal ${label || ''}`}
+        aria-label={ariaLabel}
       >
         <div
           className={cn(
@@ -54,17 +56,17 @@ export function TarotCard({ card, isFlipped, onFlip, label, className }: TarotCa
           <div className="absolute w-full h-full rounded-lg backface-hidden rotate-y-180 bg-card overflow-hidden">
             {card ? (
               <div className="flex flex-col items-center justify-center h-full p-2">
-                <div className="relative w-full flex-grow mb-2">
+                <div className={cn("relative w-full flex-grow mb-2", card.isReversed ? 'rotate-180' : '')}>
                    <Image
                     src={card.imageUrl}
-                    alt={card.name}
+                    alt={card.name} // Alt text should be the card name, not including reversal status for screen readers on image itself
                     fill
                     sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                     className="object-contain rounded-md"
                     data-ai-hint={card.dataAiHint}
                   />
                 </div>
-                <p className="text-sm font-semibold text-center text-card-foreground truncate w-full px-1">{card.name}</p>
+                <p className="text-sm font-semibold text-center text-card-foreground truncate w-full px-1">{cardName}</p>
               </div>
             ) : (
               <div className="flex items-center justify-center h-full text-muted-foreground">
@@ -78,24 +80,9 @@ export function TarotCard({ card, isFlipped, onFlip, label, className }: TarotCa
   );
 }
 
-// Add these utility classes to your global CSS or a utility CSS file if they don't exist
-// Or ensure your tailwind config supports them (which it should with JIT)
-const utilityStyles = `
-.perspective { perspective: 1000px; }
-.preserve-3d { transform-style: preserve-3d; }
-.rotate-y-180 { transform: rotateY(180deg); }
-.backface-hidden { backface-visibility: hidden; -webkit-backface-visibility: hidden; }
-`;
-
-// If you have a global CSS file (e.g., src/app/globals.css), you can add them there:
-/*
-@layer utilities {
-  .perspective { perspective: 1000px; }
-  .preserve-3d { transform-style: preserve-3d; }
-  .rotate-y-180 { transform: rotateY(180deg); }
-  .backface-hidden { backface-visibility: hidden; -webkit-backface-visibility: hidden; }
-}
-*/
-// Note: For this exercise, I'm assuming these transforms are generally supported and Tailwind JIT will handle them.
-// The keyframes for 'card-flip' are in tailwind.config.ts.
-// The actual rotation is handled by conditionally adding 'rotate-y-180' class.
+// Utility classes (ensure these are in globals.css or handled by Tailwind JIT)
+// .perspective { perspective: 1000px; }
+// .preserve-3d { transform-style: preserve-3d; }
+// .rotate-y-180 { transform: rotateY(180deg); } // For card flip
+// .rotate-180 { transform: rotate(180deg); } // For reversed card image
+// .backface-hidden { backface-visibility: hidden; -webkit-backface-visibility: hidden; }
