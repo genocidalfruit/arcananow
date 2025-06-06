@@ -231,7 +231,7 @@ export default function HomePage() {
             size="lg"
             onClick={handleInterpretSpread}
             disabled={isLoadingInterpretation}
-            className="bg-accent hover:bg-accent/90 text-accent-foreground font-headline text-xl px-8 py-6 shadow-lg transform hover:scale-105 transition-transform duration-150 mt-20"
+            className="bg-accent hover:bg-accent/90 text-accent-foreground font-headline text-xl px-8 py-6 shadow-lg transform hover:scale-105 transition-transform duration-150 mt-20 mb-10"
             aria-label={`Interpret the revealed ${currentSpreadConfig.label}`}
           >
             <BookOpenText className="mr-2 h-6 w-6" />
