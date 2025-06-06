@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, useCallback } from 'react';
@@ -24,7 +23,6 @@ interface SpreadConfiguration {
   label: string;
   cardCount: number;
   labels: string[];
-  getGridClass: () => string;
 }
 
 const SPREAD_CONFIGS: Record<string, SpreadConfiguration> = {
@@ -33,14 +31,12 @@ const SPREAD_CONFIGS: Record<string, SpreadConfiguration> = {
     label: 'Three Card Spread',
     cardCount: 3,
     labels: ["Past", "Present", "Future"],
-    getGridClass: () => "md:grid-cols-3",
   },
   pentagram: {
     value: 'pentagram',
     label: 'Pentagram Spread',
     cardCount: 5,
     labels: ["1. Earth (Present)", "2. Air (Intellect)", "3. Fire (Action)", "4. Water (Emotions)", "5. Spirit (Guidance)"],
-    getGridClass: () => "grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5",
   },
   celticCross: {
     value: 'celticCross',
@@ -58,7 +54,6 @@ const SPREAD_CONFIGS: Record<string, SpreadConfiguration> = {
       "9. Hopes and Fears",
       "10. Outcome (Overall)",
     ],
-    getGridClass: () => "grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5",
   },
 };
 
@@ -91,26 +86,27 @@ export default function HomePage() {
     setFlippedStates(Array(newConfig.cardCount).fill(false));
     setInterpretation(null);
     setHasDrawn(false);
-    setIsLoadingInterpretation(false); // Reset loading state when spread changes
+    setIsLoadingInterpretation(false);
   }, [selectedSpread]);
 
   const handleShuffleAndDraw = useCallback(() => {
+    const spreadConfig = SPREAD_CONFIGS[selectedSpread];
     const newShuffledDeck = shuffleDeck(fullTarotDeck);
     setShuffledDeck(newShuffledDeck);
-    const newDrawnCards = drawCards(newShuffledDeck, currentSpreadConfig.cardCount);
+    const newDrawnCards = drawCards(newShuffledDeck, spreadConfig.cardCount);
     setDrawnCards(newDrawnCards);
-    setFlippedStates(Array(currentSpreadConfig.cardCount).fill(false));
+    setFlippedStates(Array(spreadConfig.cardCount).fill(false));
     setInterpretation(null);
     setHasDrawn(true);
     setIsLoadingInterpretation(false);
     toast({
       title: "Deck Shuffled & Cards Drawn",
-      description: `Your ${currentSpreadConfig.label} cards are ready. Some may be reversed.`,
+      description: `Your ${spreadConfig.label} cards are ready. Some may be reversed.`,
     });
-  }, [currentSpreadConfig, toast]);
+  }, [selectedSpread, toast]);
 
   const handleFlipCard = (index: number) => {
-    if (!drawnCards[index] || !drawnCards[index].id) return; // Prevent flipping placeholders
+    if (!drawnCards[index] || !drawnCards[index].id) return;
     setFlippedStates(prev => {
       const newState = [...prev];
       newState[index] = !newState[index];
@@ -120,10 +116,9 @@ export default function HomePage() {
 
   const allCardsFlipped =
     drawnCards.length > 0 &&
-    drawnCards.every(card => card && typeof card.id === 'string' && card.id !== '') && // Ensures all drawn cards are actual cards (non-empty ID)
+    drawnCards.every(card => card && typeof card.id === 'string' && card.id !== '') &&
     flippedStates.length === drawnCards.length &&
     flippedStates.every(state => state === true);
-
 
   const handleInterpretSpread = async () => {
     if (!allCardsFlipped) {
@@ -137,7 +132,7 @@ export default function HomePage() {
 
     const cardDetailsForAI = drawnCards
       .map((card, index) => {
-        if (card && card.id) { // Ensure we only send valid card data
+        if (card && card.id) {
           return {
             name: card.name,
             positionLabel: currentSpreadConfig.labels[index],
@@ -149,12 +144,12 @@ export default function HomePage() {
       .filter((c): c is { name: string; positionLabel: string; isReversed: boolean } => c !== null);
 
     if (cardDetailsForAI.length !== currentSpreadConfig.cardCount) {
-        toast({
-            title: "Error",
-            description: "Not enough valid cards to interpret for the selected spread.",
-            variant: "destructive",
-        });
-        return;
+      toast({
+        title: "Error",
+        description: "Not enough valid cards to interpret for the selected spread.",
+        variant: "destructive",
+      });
+      return;
     }
 
     const aiInput: InterpretTarotCardsInput = {
@@ -163,7 +158,7 @@ export default function HomePage() {
     };
 
     setIsLoadingInterpretation(true);
-    setInterpretation(null); // Clear previous interpretation
+    setInterpretation(null);
     try {
       const result = await interpretTarotCards(aiInput);
       setInterpretation(result.interpretation);
@@ -215,7 +210,7 @@ export default function HomePage() {
 
       {hasDrawn && drawnCards.length > 0 && drawnCards[0]?.id && (
         <section aria-label={`Tarot card spread: ${currentSpreadConfig.label}`} className="mb-4 w-full max-w-5xl">
-          <div className={`grid ${currentSpreadConfig.getGridClass()} gap-4 md:gap-6 items-start justify-center`}>
+          <div className="flex flex-wrap justify-center gap-8 md:gap-12 w-full">
             {drawnCards.map((card, index) => (
               <TarotCard
                 key={card && card.id ? `${card.id}-${index}-${card.isReversed}` : `placeholder-${index}-${selectedSpread}`}
@@ -223,7 +218,7 @@ export default function HomePage() {
                 isFlipped={flippedStates[index]}
                 onFlip={() => handleFlipCard(index)}
                 label={currentSpreadConfig.labels[index]}
-                className="mx-auto"
+                className="flex-1 min-w-[180px] max-w-[220px] mx-auto"
               />
             ))}
           </div>
@@ -235,7 +230,8 @@ export default function HomePage() {
           <Button
             size="lg"
             onClick={handleInterpretSpread}
-            className="bg-accent hover:bg-accent/90 text-accent-foreground font-headline text-xl px-8 py-6 shadow-lg transform hover:scale-105 transition-transform duration-150"
+            disabled={isLoadingInterpretation}
+            className="bg-accent hover:bg-accent/90 text-accent-foreground font-headline text-xl px-8 py-6 shadow-lg transform hover:scale-105 transition-transform duration-150 mt-20"
             aria-label={`Interpret the revealed ${currentSpreadConfig.label}`}
           >
             <BookOpenText className="mr-2 h-6 w-6" />
@@ -269,14 +265,11 @@ export default function HomePage() {
 
       {!hasDrawn && (
         <div className="text-center mt-12 p-8 border-2 border-dashed border-muted-foreground/50 rounded-lg max-w-md mx-auto">
-            <Dices className="h-16 w-16 text-muted-foreground/70 mx-auto mb-4" />
-            <h2 className="text-2xl font-headline text-muted-foreground mb-2">Ready to explore your path?</h2>
-            <p className="text-muted-foreground/80">Select a spread type and click "Shuffle & Draw" to begin.</p>
+          <Dices className="h-16 w-16 text-muted-foreground/70 mx-auto mb-4" />
+          <h2 className="text-2xl font-headline text-muted-foreground mb-2">Ready to explore your path?</h2>
+          <p className="text-muted-foreground/80">Select a spread type and click "Shuffle & Draw" to begin.</p>
         </div>
       )}
-
     </div>
   );
 }
-
-    
