@@ -71,7 +71,7 @@ export default function HomePage() {
   const [selectedSpread, setSelectedSpread] = useState<string>(SPREAD_OPTIONS[0].value);
   const currentSpreadConfig = SPREAD_CONFIGS[selectedSpread];
 
-  const [drawnCards, setDrawnCards] = useState<TarotCardData[]>([]); // TarotCardData now includes isReversed
+  const [drawnCards, setDrawnCards] = useState<TarotCardData[]>([]);
   const [flippedStates, setFlippedStates] = useState<boolean[]>([]);
   const [interpretation, setInterpretation] = useState<string | null>(null);
   const [isLoadingInterpretation, setIsLoadingInterpretation] = useState(false);
@@ -86,18 +86,16 @@ export default function HomePage() {
   useEffect(() => {
     const newConfig = SPREAD_CONFIGS[selectedSpread];
     setDrawnCards(Array(newConfig.cardCount).fill(null).map(() => ({
-        // Placeholder structure until actual cards are drawn
-        id: '', name: '', arcana: 'Major', imageUrl: '', dataAiHint: '', isReversed: false 
+        id: '', name: '', arcana: 'Major', imageUrl: '', dataAiHint: '', isReversed: false
     })));
     setFlippedStates(Array(newConfig.cardCount).fill(false));
     setInterpretation(null);
-    setHasDrawn(false); 
+    setHasDrawn(false);
   }, [selectedSpread]);
 
   const handleShuffleAndDraw = useCallback(() => {
     const newShuffledDeck = shuffleDeck(fullTarotDeck);
     setShuffledDeck(newShuffledDeck);
-    // drawCards now handles random reversal internally
     const newDrawnCards = drawCards(newShuffledDeck, currentSpreadConfig.cardCount);
     setDrawnCards(newDrawnCards);
     setFlippedStates(Array(currentSpreadConfig.cardCount).fill(false));
@@ -110,7 +108,7 @@ export default function HomePage() {
   }, [currentSpreadConfig, toast]);
 
   const handleFlipCard = (index: number) => {
-    if (!drawnCards[index] || !drawnCards[index].id) return; // Check if card has an id (is a real card)
+    if (!drawnCards[index] || !drawnCards[index].id) return;
     setFlippedStates(prev => {
       const newState = [...prev];
       newState[index] = !newState[index];
@@ -118,8 +116,8 @@ export default function HomePage() {
     });
   };
 
-  const allCardsFlipped = drawnCards.length > 0 && 
-                          drawnCards.every(card => card && card.id) && // Ensure all card slots are filled with actual cards
+  const allCardsFlipped = drawnCards.length > 0 &&
+                          drawnCards.every(card => card && card.id && card.id !== '') && // Ensure all card slots are filled with actual cards with non-empty IDs
                           flippedStates.length === drawnCards.length &&
                           flippedStates.every(state => state);
 
@@ -135,11 +133,11 @@ export default function HomePage() {
 
     const cardDetailsForAI = drawnCards
       .map((card, index) => {
-        if (card && card.id) { // Ensure card is not a placeholder and has an id
+        if (card && card.id) {
           return {
             name: card.name,
             positionLabel: currentSpreadConfig.labels[index],
-            isReversed: !!card.isReversed, // Pass reversal status
+            isReversed: !!card.isReversed,
           };
         }
         return null;
@@ -154,14 +152,14 @@ export default function HomePage() {
         });
         return;
     }
-    
+
     const aiInput: InterpretTarotCardsInput = {
       spreadType: currentSpreadConfig.label,
       cards: cardDetailsForAI,
     };
-    
+
     setIsLoadingInterpretation(true);
-    setInterpretation(null); 
+    setInterpretation(null);
     try {
       const result = await interpretTarotCards(aiInput);
       setInterpretation(result.interpretation);
@@ -199,9 +197,9 @@ export default function HomePage() {
             ))}
           </SelectContent>
         </Select>
-        <Button 
-          size="lg" 
-          onClick={handleShuffleAndDraw} 
+        <Button
+          size="lg"
+          onClick={handleShuffleAndDraw}
           className="bg-primary hover:bg-primary/90 text-primary-foreground font-headline text-xl px-8 py-3 h-12 shadow-lg transform hover:scale-105 transition-transform duration-150 w-full sm:w-auto"
           aria-label={`Shuffle deck and draw ${currentSpreadConfig.cardCount} cards for ${currentSpreadConfig.label}`}
           disabled={isLoadingInterpretation}
@@ -211,13 +209,13 @@ export default function HomePage() {
         </Button>
       </div>
 
-      {hasDrawn && drawnCards.length > 0 && drawnCards[0]?.id && ( // Check if first card has an id (meaning real cards are drawn)
+      {hasDrawn && drawnCards.length > 0 && drawnCards[0]?.id && (
         <section aria-label={`Tarot card spread: ${currentSpreadConfig.label}`} className="mb-12 w-full max-w-5xl">
           <div className={`grid ${currentSpreadConfig.getGridClass()} gap-4 md:gap-6 items-start justify-center`}>
             {drawnCards.map((card, index) => (
               <TarotCard
                 key={card && card.id ? `${card.id}-${index}-${card.isReversed}` : `placeholder-${index}-${selectedSpread}`}
-                card={card} // Pass the full card object which includes isReversed
+                card={card}
                 isFlipped={flippedStates[index]}
                 onFlip={() => handleFlipCard(index)}
                 label={currentSpreadConfig.labels[index]}
@@ -230,9 +228,9 @@ export default function HomePage() {
 
       {hasDrawn && allCardsFlipped && !isLoadingInterpretation && !interpretation && (
         <div className="my-8">
-          <Button 
-            size="lg" 
-            onClick={handleInterpretSpread} 
+          <Button
+            size="lg"
+            onClick={handleInterpretSpread}
             className="bg-accent hover:bg-accent/90 text-accent-foreground font-headline text-xl px-8 py-6 shadow-lg transform hover:scale-105 transition-transform duration-150"
             aria-label={`Interpret the revealed ${currentSpreadConfig.label}`}
           >
@@ -241,7 +239,7 @@ export default function HomePage() {
           </Button>
         </div>
       )}
-      
+
       {isLoadingInterpretation && (
         <div className="my-8 flex flex-col items-center space-y-2">
           <LoadingSpinner size={48} />
@@ -264,7 +262,7 @@ export default function HomePage() {
           </CardContent>
         </UICard>
       )}
-      
+
       {!hasDrawn && (
         <div className="text-center mt-12 p-8 border-2 border-dashed border-muted-foreground/50 rounded-lg max-w-md mx-auto">
             <Dices className="h-16 w-16 text-muted-foreground/70 mx-auto mb-4" />
