@@ -91,8 +91,7 @@ export default function HomePage() {
     setFlippedStates(Array(newConfig.cardCount).fill(false));
     setInterpretation(null);
     setHasDrawn(false);
-    // Ensure loading state is false if spread changes during a load
-    // setIsLoadingInterpretation(false); 
+    setIsLoadingInterpretation(false); // Reset loading state when spread changes
   }, [selectedSpread]);
 
   const handleShuffleAndDraw = useCallback(() => {
@@ -111,8 +110,7 @@ export default function HomePage() {
   }, [currentSpreadConfig, toast]);
 
   const handleFlipCard = (index: number) => {
-    // Only flip if it's a real card (has an ID)
-    if (!drawnCards[index] || !drawnCards[index].id) return; 
+    if (!drawnCards[index] || !drawnCards[index].id) return;
     setFlippedStates(prev => {
       const newState = [...prev];
       newState[index] = !newState[index];
@@ -120,20 +118,14 @@ export default function HomePage() {
     });
   };
 
-  // Condition to show interpret button:
-  // 1. Cards have been drawn for the current spread.
-  // 2. All drawn cards are actual cards (not placeholders, i.e., have an ID).
-  // 3. All drawn cards have been flipped.
-  // 4. Not currently loading an interpretation.
-  // 5. No interpretation is currently displayed.
-  const allCardsFlipped = 
-    drawnCards.length > 0 && // Make sure there are cards
-    drawnCards.every(card => card && card.id) && // All cards in drawnCards are "real" (have an id)
-    flippedStates.length === drawnCards.length && // Safety check
-    flippedStates.every(state => state === true); // All cards are flipped up
+  const allCardsFlipped =
+    drawnCards.length > 0 &&
+    drawnCards.every(card => card && card.id) &&
+    flippedStates.length === drawnCards.length &&
+    flippedStates.every(state => state === true);
 
   const handleInterpretSpread = async () => {
-    if (!allCardsFlipped) { // This check might be redundant if button visibility is correct, but good for safety.
+    if (!allCardsFlipped) {
       toast({
         title: "Reveal All Cards",
         description: "Please flip all cards before seeking an interpretation.",
@@ -144,7 +136,7 @@ export default function HomePage() {
 
     const cardDetailsForAI = drawnCards
       .map((card, index) => {
-        if (card && card.id) { // Ensure we only send real cards
+        if (card && card.id) {
           return {
             name: card.name,
             positionLabel: currentSpreadConfig.labels[index],
@@ -170,7 +162,7 @@ export default function HomePage() {
     };
 
     setIsLoadingInterpretation(true);
-    setInterpretation(null); // Clear old interpretation before fetching new
+    setInterpretation(null);
     try {
       const result = await interpretTarotCards(aiInput);
       setInterpretation(result.interpretation);
