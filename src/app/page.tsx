@@ -91,7 +91,7 @@ export default function HomePage() {
     setFlippedStates(Array(newConfig.cardCount).fill(false));
     setInterpretation(null);
     setHasDrawn(false);
-    setIsLoadingInterpretation(false); // Reset loading state when spread changes
+    setIsLoadingInterpretation(false);
   }, [selectedSpread]);
 
   const handleShuffleAndDraw = useCallback(() => {
@@ -100,9 +100,9 @@ export default function HomePage() {
     const newDrawnCards = drawCards(newShuffledDeck, currentSpreadConfig.cardCount);
     setDrawnCards(newDrawnCards);
     setFlippedStates(Array(currentSpreadConfig.cardCount).fill(false));
-    setInterpretation(null); // Clear previous interpretation
+    setInterpretation(null);
     setHasDrawn(true);
-    setIsLoadingInterpretation(false); // Ensure loading is reset
+    setIsLoadingInterpretation(false);
     toast({
       title: "Deck Shuffled & Cards Drawn",
       description: `Your ${currentSpreadConfig.label} cards are ready. Some may be reversed.`,
@@ -120,9 +120,10 @@ export default function HomePage() {
 
   const allCardsFlipped =
     drawnCards.length > 0 &&
-    drawnCards.every(card => card && card.id) &&
+    drawnCards.every(card => card?.id) && // check if card.id is truthy (not null, undefined, or empty string)
     flippedStates.length === drawnCards.length &&
     flippedStates.every(state => state === true);
+
 
   const handleInterpretSpread = async () => {
     if (!allCardsFlipped) {
@@ -213,7 +214,7 @@ export default function HomePage() {
       </div>
 
       {hasDrawn && drawnCards.length > 0 && drawnCards[0]?.id && (
-        <section aria-label={`Tarot card spread: ${currentSpreadConfig.label}`} className="mb-12 w-full max-w-5xl">
+        <section aria-label={`Tarot card spread: ${currentSpreadConfig.label}`} className="mb-4 w-full max-w-5xl"> {/* Reduced mb-12 to mb-4 */}
           <div className={`grid ${currentSpreadConfig.getGridClass()} gap-4 md:gap-6 items-start justify-center`}>
             {drawnCards.map((card, index) => (
               <TarotCard
@@ -230,7 +231,7 @@ export default function HomePage() {
       )}
 
       {hasDrawn && allCardsFlipped && !isLoadingInterpretation && !interpretation && (
-        <div className="my-8">
+        <div className="mt-4 mb-8"> {/* Changed my-8 to mt-4 mb-8 */}
           <Button
             size="lg"
             onClick={handleInterpretSpread}
