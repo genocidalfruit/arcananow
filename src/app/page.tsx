@@ -120,7 +120,7 @@ export default function HomePage() {
 
   const allCardsFlipped =
     drawnCards.length > 0 &&
-    drawnCards.every(card => card?.id) && // check if card.id is truthy (not null, undefined, or empty string)
+    drawnCards.every(card => card && typeof card.id === 'string' && card.id !== '') &&
     flippedStates.length === drawnCards.length &&
     flippedStates.every(state => state === true);
 
@@ -214,7 +214,7 @@ export default function HomePage() {
       </div>
 
       {hasDrawn && drawnCards.length > 0 && drawnCards[0]?.id && (
-        <section aria-label={`Tarot card spread: ${currentSpreadConfig.label}`} className="mb-4 w-full max-w-5xl"> {/* Reduced mb-12 to mb-4 */}
+        <section aria-label={`Tarot card spread: ${currentSpreadConfig.label}`} className="mb-4 w-full max-w-5xl">
           <div className={`grid ${currentSpreadConfig.getGridClass()} gap-4 md:gap-6 items-start justify-center`}>
             {drawnCards.map((card, index) => (
               <TarotCard
@@ -231,7 +231,7 @@ export default function HomePage() {
       )}
 
       {hasDrawn && allCardsFlipped && !isLoadingInterpretation && !interpretation && (
-        <div className="mt-4 mb-8"> {/* Changed my-8 to mt-4 mb-8 */}
+        <div className="mt-4 mb-8">
           <Button
             size="lg"
             onClick={handleInterpretSpread}
