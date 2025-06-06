@@ -101,7 +101,7 @@ export default function HomePage() {
     setIsLoadingInterpretation(false);
     toast({
       title: "Deck Shuffled & Cards Drawn",
-      description: `Your ${spreadConfig.label} cards are ready. Some may be reversed.`,
+      description: `Your ${spreadConfig.label} cards are ready.`,
     });
   }, [selectedSpread, toast]);
 
