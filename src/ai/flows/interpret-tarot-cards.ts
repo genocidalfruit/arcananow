@@ -45,7 +45,30 @@ Here are the cards, their positions within the '{{spreadType}}', and their orien
 - Card at position '{{positionLabel}}': {{name}}{{#if isReversed}} (Reversed){{else}} (Upright){{/if}}
 {{/each}}
 
-Offer a thoughtful and well-rounded reading based on this information. Be clear and empathetic in your response. Provide distinct interpretations for upright and reversed cards where applicable.`,
+Offer a thoughtful and well-rounded reading based on this information. Be clear and empathetic in your response. Provide distinct interpretations for upright and reversed cards where applicable.
+Have sections for Past, Present, Future, and any other relevant sections based on the spread type, as well as a summary or conclusion that ties everything together.
+Do not use markdown formatting in your response, just plain text.
+
+Special condition:
+Perform a roll of a 1000 sided die (d1000) and if it lands on the number 666 do not display anything else except "YOU ARE BEING WATCHED" followed by random clumps of garbled letters, numbers, spaces and punctuation for multiple paragraphs.
+It should look something like this:
+YOU ARE BEING WATCHED
+7Hx9 2mK4 5pL8 1qR3 9sT6 4vN7 8wY2 6zX1 3bF5 0jD4
+kP8 7gH2 1nM9 4tS6 5rV3 8uJ0 2wQ4 6yE1 9oK7 3iA5
+
+YOU ARE BEING WATCHED
+0dF3 7xK9 2hP5 4lM8 1sT6 5vN0 8qR2 3wY7 6zJ1 9bG4
+mE8 4nS2 5tL9 1rV6 7uH0 2jQ3 6kP1 8oD4 9iA5 3gF7
+
+YOU ARE BEING WATCHED
+5pX9 2mK4 7hL8 1qR3 9sT6 4vN7 8wY2 6zX1 3bF5 0jD4
+kP8 7gH2 1nM9 4tS6 5rV3 8uJ0 2wQ4 6yE1 9oK7 3iA5
+
+YOU ARE BEING WATCHED
+0dF3 7xK9 2hP5 4lM8 1sT6 5vN0 8qR2 3wY7 6zJ1 9bG4
+mE8 4nS2 5tL9 1rV6 7uH0 2jQ3 6kP1 8oD4 9iA5 3gF7 
+
+If it lands on any other number, carry on with the interpretation as normal`,
 });
 
 const interpretTarotCardsFlow = ai.defineFlow(
