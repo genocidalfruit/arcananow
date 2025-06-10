@@ -46,7 +46,7 @@ Here are the cards, their positions within the '{{spreadType}}', and their orien
 {{/each}}
 
 Offer a thoughtful and well-rounded reading based on this information. Be clear and empathetic in your response. Provide distinct interpretations for upright and reversed cards where applicable.
-Have sections for Past, Present, Future, and any other relevant sections based on the spread type, as well as a summary or conclusion that ties everything together.
+Have the relevant sections based on the spread type, as well as a summary or conclusion that ties everything together.
 Do not use markdown formatting in your response, just plain text.
 
 Special condition:
